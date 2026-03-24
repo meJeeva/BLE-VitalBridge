@@ -13,6 +13,9 @@ import {
 import { State } from "react-native-ble-plx";
 import { getBleManager, destroyBleManager } from "../../services/ble/bleManager";
 import requestBLEPermissions from "./../../services/ble/requestBLEPermissions";
+import { VBButton, VBIcon } from "../../components/common";
+import { COLORS } from "../../theme";
+import BluetoothStateManager from 'react-native-bluetooth-state-manager';
 
 const SCAN_CYCLE_MS = 8000;
 const SCAN_RESTART_DELAY_MS = 1500;
@@ -49,12 +52,17 @@ const BLEScreen = () => {
     };
   }, []);
 
+  const handleOpenBluetoothModal = () => {
+  };
+
   const cleanup = () => {
     isContinuousRef.current = false;
     clearTimeout(scanCycleTimerRef.current);
     clearTimeout(restartTimerRef.current);
     stateSubscriptionRef.current?.remove();
-    try { getBleManager().stopDeviceScan(); } catch (_) {}
+    try { getBleManager().stopDeviceScan(); } catch (e) {
+      console.log('catch in cleanup : ', e)
+    }
     destroyBleManager();
   };
 
@@ -73,21 +81,35 @@ const BLEScreen = () => {
       );
       return;
     }
+    const manager = getBleManager();
+    manager.onStateChange(state => {
+      setBtState(state);
+      btStateRef.current = state;
+    }, true);
 
+    const enabled = await requestEnableBluetooth();
     listenToBluetoothState();
   };
 
 
-  const askToEnableBluetooth = async () => {
-    if (Platform.OS !== "android") return;
-
+ const requestEnableBluetooth = async () => {
+  if (Platform.OS === 'android') {
     try {
-      setStatusMessage("Please turn on the bluetooth");
-      await getBleManager().enable();
-    } catch (error) {
-    }
-  };
+      const result = await BluetoothStateManager.requestToEnable();
 
+      if (result) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      return false;
+    }
+  } else {
+    Linking.openURL('app-settings:'); 
+    return false;
+  }
+};
 
   const listenToBluetoothState = () => {
     const manager = getBleManager();
@@ -107,37 +129,7 @@ const BLEScreen = () => {
         case State.PoweredOff:
           setStatusMessage("Bluetooth is off.");
           stopAllScanning();
-          if (Platform.OS === "ios") {
-            Alert.alert(
-              "Bluetooth Off",
-              "Please enable Bluetooth to scan for devices.",
-              [
-                { text: "Cancel", style: "cancel" },
-                {
-                  text: "Open Settings",
-                  onPress: () => Linking.openURL("App-Prefs:Bluetooth"),
-                },
-              ]
-            );
-          } else {
-            Alert.alert(
-              "Bluetooth Turned Off",
-              "Would you like to turn Bluetooth back on?",
-              [
-                { text: "No", style: "cancel" },
-                {
-                  text: "Turn On",
-                  onPress: async () => {
-                    try {
-                      await getBleManager().enable();
-                    } catch (_) {
-                      Linking.sendIntent("android.settings.BLUETOOTH_SETTINGS");
-                    }
-                  },
-                },
-              ]
-            );
-          }
+          handleOpenBluetoothModal();
           break;
 
         case State.Unauthorized:
@@ -149,11 +141,13 @@ const BLEScreen = () => {
             [
               { text: "Cancel", style: "cancel" },
               {
-                text: "Open Settings",
-                onPress: () =>
-                  Platform.OS === "ios"
-                    ? Linking.openURL("app-settings:")
-                    : Linking.sendIntent("android.settings.APPLICATION_DETAILS_SETTINGS"),
+                text: "Turn on bluetooth",
+                onPress: async () => {
+                  const enabled = await requestEnableBluetooth();
+                  if (!enabled) {
+                    Linking.openSettings();
+                  }
+                },
               },
             ]
           );
@@ -248,24 +242,28 @@ const BLEScreen = () => {
     isContinuousRef.current = false;
     clearTimeout(scanCycleTimerRef.current);
     clearTimeout(restartTimerRef.current);
-    try { getBleManager().stopDeviceScan(); } catch (_) {}
+    try { getBleManager().stopDeviceScan(); } catch (e) {
+    }
     setScanning(false);
     setStatusMessage("Scan stopped.");
   };
 
-  const handleToggleScan = () => {
+  const handleToggleScan = async () => {
     if (scanning) {
       stopAllScanning();
-      setStatusMessage("Scan paused. Tap to resume.");
-    } else {
-      if (btStateRef.current !== State.PoweredOn) {
-        askToEnableBluetooth();
-        return;
-      }
-      isContinuousRef.current = true;
-      setDevices([]);
-      startScanCycle();
+      return;
     }
+
+    if (btStateRef.current !== State.PoweredOn) {
+      const enabled = await requestEnableBluetooth();
+
+      if (!enabled) return;
+      return;
+    }
+
+    isContinuousRef.current = true;
+    setDevices([]);
+    startScanCycle();
   };
 
 
@@ -294,6 +292,7 @@ const BLEScreen = () => {
         startScanCycle();
       });
     } catch (error) {
+      console.log("Error connecting to device:", error);
       setStatusMessage("Connection failed.");
       Alert.alert(
         "Connection Failed",
@@ -311,6 +310,17 @@ const BLEScreen = () => {
         connectedDeviceRef.current = null;
         setConnectedId(null);
         setStatusMessage("Disconnected.");
+      }
+    } catch (error) {
+    }
+  };
+
+  const handleOpenSettings = () => {
+    try {
+      if (Platform.OS === 'ios') {
+        Linking.openURL('app-settings:');
+      } else {
+        Linking.openSettings();
       }
     } catch (error) {
     }
@@ -373,11 +383,21 @@ const BLEScreen = () => {
 
       {btState === State.PoweredOff ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>📵</Text>
+          <VBIcon
+            type="MaterialIcons"
+            name="bluetooth"
+            size={48}
+            color="#9ca3af"
+          />
           <Text style={styles.emptyTitle}>Bluetooth is off</Text>
           <Text style={styles.emptySubtitle}>
             Turn on the Bluetooth to scan for devices.
           </Text>
+          <VBButton
+            title="Open Settings"
+            onPress={handleOpenSettings}
+            style={[styles.button, styles.settingsButton]}
+          />
         </View>
       ) : (
         <FlatList
@@ -399,6 +419,7 @@ const BLEScreen = () => {
         />
       )}
 
+      {btState !== State.PoweredOff && (
       <TouchableOpacity
         style={[styles.scanBtn, scanning && styles.scanBtnActive]}
         onPress={handleToggleScan}
@@ -407,6 +428,7 @@ const BLEScreen = () => {
           {scanning ? "⏹  Stop Scanning" : "▶  Start Scanning"}
         </Text>
       </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -496,4 +518,18 @@ const styles = StyleSheet.create({
   },
   scanBtnActive: { backgroundColor: "#ef4444" },
   scanBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  buttonContainer: {
+    width: '100%',
+    gap: 12,
+    height: 100
+  },
+  button: {
+    marginTop: 20
+  },
+  cancelButton: {
+    backgroundColor: COLORS.lightGrey,
+  },
+  settingsButton: {
+    backgroundColor: COLORS.primary,
+  },
 });
