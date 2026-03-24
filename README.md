@@ -1,97 +1,244 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
-# Getting Started
+This document outlines the folder structure and purpose of each directory in the VitalBridge React Native project.
+## Folder Structure
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
-
-## Step 1: Start Metro
-
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
-
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+```
+src/
+│
+├── assets/                # Static assets
+├── components/            # Reusable UI components
+├── screens/               # Screen-level components
+├── navigation/            # Navigation configuration
+├── services/              # External service integrations
+├── store/                 # State management
+├── hooks/                 # Custom React hooks
+├── utils/                 # Utility functions
+├── theme/                 # App theme and styling
+├── config/                # App configuration
+└── context/               # React Context providers
 ```
 
-## Step 2: Build and run your app
+## Detailed Breakdown
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+### `assets/`
+**Purpose**: Contains all static assets used throughout the application.
 
-### Android
+**Subdirectories**:
+- `images/` - All image files (PNG, JPG, SVG, etc.)
+- `icons/` - Icon files and icon sets
+- `fonts/` - Custom font files
 
-```sh
-# Using npm
-npm run android
+**What to store here**:
+- App logos and branding images
+- Illustrations and graphics
+- Icon libraries (Feather, Material Icons, etc.)
+- Custom font files (TTF, OTF)
 
-# OR using Yarn
-yarn android
-```
+---
 
-### iOS
+### `components/`
+**Purpose**: Reusable UI components that are presentational/dumb components.
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+**Subdirectories**:
+- `common/` - Basic UI elements (Button, Input, Loader, Card)
+- `layout/` - Layout components (Header, Footer, ScreenWrapper)
+- `feedback/` - User feedback components (Toast, Modal, Snackbar)
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+**What to store here**:
+- Reusable UI components that don't contain business logic
+- Styled components that can be used across multiple screens
+- Presentational components that receive props and render UI
 
-```sh
-bundle install
-```
+---
 
-Then, and every time you update your native dependencies, run:
+### `screens/`
+**Purpose**: Screen-level components (smart components) that contain business logic.
 
-```sh
-bundle exec pod install
-```
+**Subdirectories**:
+- `Auth/` - Authentication screens (Login, Register, ForgotPassword)
+- `Dashboard/` - Main dashboard and overview screens
+- `Patients/` - Patient management screens
+- `Devices/` - BLE device connection and management screens
+- `Settings/` - App settings and configuration screens
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+**What to store here**:
+- Screen components that combine multiple smaller components
+- Components that handle user interactions and business logic
+- Components that connect to Redux store or use custom hooks
+- Navigation-specific components
 
-```sh
-# Using npm
-npm run ios
+---
 
-# OR using Yarn
-yarn ios
-```
+### `navigation/`
+**Purpose**: Navigation configuration and setup.
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+**Files**:
+- `RootNavigator.js` - Root navigation container
+- `AuthNavigator.js` - Authentication flow navigator
+- `AppNavigator.js` - Main app navigator (after auth)
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+**What to store here**:
+- Navigation stack configurations
+- Tab navigator setups
+- Navigation utilities and helpers
+- Route definitions and deep linking configs
 
-## Step 3: Modify your app
+---
 
-Now that you have successfully run the app, let's make changes!
+### `services/`
+**Purpose**: External service integrations and API communications.
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+**Subdirectories**:
+- `api/` - HTTP client and API endpoints
+  - `client.js` - Axios setup and configuration
+  - `endpoints.js` - API endpoint definitions
+- `ble/` - Bluetooth Low Energy functionality
+  - `bleManager.js` - BLE device management
+  - `bleService.js` - BLE service operations
+  - `bleHelpers.js` - BLE utility functions
+- `storage/` - Local storage management
+  - `asyncStorage.js` - Async storage utilities
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+**What to store here**:
+- API client configurations
+- Service layer abstractions
+- External integrations (BLE, payments, analytics)
+- Data persistence logic
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+---
 
-## Congratulations! :tada:
+### `store/`
+**Purpose**: Global state management using Redux Toolkit.
 
-You've successfully run and modified your React Native App. :partying_face:
+**Files**:
+- `index.js` - Redux store configuration
+- `rootReducer.js` - Root reducer combining all slices
 
-### Now what?
+**Subdirectories**:
+- `slices/` - Redux Toolkit slices
+  - `authSlice.js` - Authentication state
+  - `patientSlice.js` - Patient data state
+  - `deviceSlice.js` - Device connection state
+  - `appSlice.js` - Global app state
+- `middleware/` - Custom Redux middleware
+  - `logger.js` - Logging middleware
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+**What to store here**:
+- Redux store configuration
+- State slices for different domains
+- Custom middleware and enhancers
+- State selectors and utilities
 
-# Troubleshooting
+---
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+###  `hooks/`
+**Purpose**: Custom React hooks for reusable logic.
 
-# Learn More
+**Files**:
+- `useBLE.js` - Bluetooth Low Energy operations
+- `useAuth.js` - Authentication logic
+- `useDebounce.js` - Debouncing utility
 
-To learn more about React Native, take a look at the following resources:
+**What to store here**:
+- Custom hooks that encapsulate complex logic
+- Hooks that combine multiple React hooks
+- Business logic extracted from components
+- Reusable stateful logic
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+---
+
+###  `utils/`
+**Purpose**: Pure utility functions and helpers.
+
+**Files**:
+- `helpers.js` - General helper functions
+- `constants.js` - App constants and enums
+- `validators.js` - Form validation functions
+- `formatters.js` - Data formatting utilities
+
+**What to store here**:
+- Pure functions without side effects
+- Validation logic
+- Data transformation functions
+- Constants and configuration values
+- Date/time utilities
+- String manipulation functions
+
+---
+
+###  `theme/`
+**Purpose**: App theme, colors, and styling configuration.
+
+**Files**:
+- `colors.js` - Color palette definitions
+- `typography.js` - Font configurations
+- `index.js` - Theme export and configuration
+
+**What to store here**:
+- Color schemes and palettes
+- Typography definitions
+- Spacing and sizing scales
+- Theme configurations for react-native-paper
+- Style constants and design tokens
+
+---
+
+###  `config/`
+**Purpose**: Application configuration and environment settings.
+
+**Files**:
+- `env.js` - Environment variables and configurations
+- `settings.js` - App settings and feature flags
+
+**What to store here**:
+- Environment-specific configurations
+- API endpoints and URLs
+- Feature flags
+- App settings and constants
+- Build configurations
+
+---
+
+###  `context/`
+**Purpose**: React Context providers for global state.
+
+**Files**:
+- `AppContext.js` - Global app context provider
+
+**What to store here**:
+- React Context providers
+- Context values and reducers
+- Global state that doesn't require Redux
+- Theme and localization contexts
+
+---
+
+## Architecture Principles
+
+1. **Separation of Concerns**: Each folder has a specific responsibility
+2. **Scalability**: Structure supports app growth and team collaboration
+3. **Maintainability**: Clear organization makes code easier to maintain
+4. **Reusability**: Components and utilities are designed for reuse
+5. **Testability**: Structure supports unit and integration testing
+
+## Best Practices
+
+- Keep components in `components/` presentational and reusable
+- Place business logic in `screens/` or custom hooks
+- Use `services/` for all external communications
+- Store global state in `store/` using Redux Toolkit
+- Keep `utils/` pure and side-effect free
+- Use TypeScript interfaces for better type safety
+- Follow consistent naming conventions across folders
+
+## Getting Started
+
+1. Install dependencies: `npm install` or `yarn install`
+2. Configure environment variables in `config/env.js`
+3. Set up Redux store in `store/index.js`
+4. Configure navigation in `navigation/`
+5. Start building screens and components
+
+---
+
+*This structure follows React Native best practices and is designed to support scalable, maintainable application development.*
